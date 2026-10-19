@@ -1,0 +1,58 @@
+[package]
+name = "asknothingx2-http"
+version = "0.1.0"
+edition = "2024"
+description = "asknothing"
+repository = "https://github.com/m3idnotfree/asknothingx2-http"
+license = "MIT OR Apache-2.0"
+keywords = ["asknothing", "client", "http", "tower"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[[example]]
+name = "reqwest"
+required-features = ["reqwest"]
+
+[[example]]
+name = "ureq"
+required-features = ["ureq"]
+
+[[example]]
+name = "custom_client"
+
+[[test]]
+name = "reqwest"
+required-features = ["reqwest"]
+
+[[test]]
+name = "ureq"
+required-features = ["ureq"]
+
+[dependencies]
+bytes = "1.12.1"
+http = "1.5.0"
+http-body = "1.1.0"
+http-body-util = "0.1.5"
+tower = { version = "0.5.3", default-features = false, features = ["util"] }
+tower-layer = "0.3.3"
+tower-service = "0.3.3"
+
+reqwest = { version = "0.13", default-features = false, optional = true }
+ureq = { version = "3.4", default-features = false, optional = true }
+
+[dev-dependencies]
+anyhow = "1.0.104"
+pollster = "1.0.1"
+reqwest = { version = "0.13.5", features = ["form", "json"] }
+serde_json = "1.0.154"
+tokio = { version = "1.53.3", features = ["macros", "rt-multi-thread", "test-util"] }
+tokio-test = "0.4.6"
+tower = { version = "0.5.3", default-features = false, features = ["limit", "retry", "timeout", "util"] }
+tower-http = { version = "0.7.1", features = ["decompression-gzip", "follow-redirect", "sensitive-headers", "set-header", "timeout", "trace"] }
+tower-test = "0.4.0"
+wiremock = "0.6.5"
+
+[features]
+reqwest = ["dep:reqwest"]
+ureq = ["dep:ureq"]
