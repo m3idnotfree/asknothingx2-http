@@ -1,7 +1,7 @@
 // ```toml
 // [dependencies]
 // anyhow = "1"
-// asknothingx2-http = "0.1"
+// asknothingx2-http = "0.2"
 // bytes = "1"
 // http = "1"
 // tower-service = "0.3"

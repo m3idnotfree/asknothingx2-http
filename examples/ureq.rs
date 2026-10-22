@@ -1,7 +1,7 @@
 // ```toml
 // [dependencies]
 // anyhow = "1"
-// asknothingx2-http = { version = "0.1", features = ["ureq"] }
+// asknothingx2-http = { version = "0.2", features = ["ureq"] }
 // http = "1"
 // pollster = "1"
 // serde_json = "1"

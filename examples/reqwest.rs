@@ -1,7 +1,7 @@
 // ```toml
 // [dependencies]
 // anyhow = "1"
-// asknothingx2-http = { version = "0.1", features = ["reqwest"] }
+// asknothingx2-http = { version = "0.2", features = ["reqwest"] }
 // http = "1"
 // reqwest = { version = "0.13", features = ["json"] }
 // serde_json = "1"
