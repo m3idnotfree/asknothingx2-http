@@ -77,7 +77,7 @@ mod service;
 
 pub use body::Body;
 pub use error::Error;
-pub use service::{ClientFuture, ClientService};
+pub use service::{ClientFuture, ClientService, HttpService};
 
 pub(crate) type BoxedFuture =
     std::pin::Pin<Box<dyn Future<Output = Result<Response, crate::error::BoxError>> + Send>>;

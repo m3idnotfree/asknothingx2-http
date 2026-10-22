@@ -13,18 +13,41 @@ use crate::{Body, BoxedFuture, Error, Request, Response, error::BoxError, try_do
 
 type BoxedService = BoxCloneSyncService<Request, Response, BoxError>;
 
+pub trait HttpService:
+    Service<
+        Request,
+        Response = http::Response<Self::ResBody>,
+        Error: Into<BoxError>,
+        Future: Send + 'static,
+    > + Clone
+    + Send
+    + Sync
+    + 'static
+{
+    type ResBody: http_body::Body<Data = Bytes, Error: Into<BoxError>> + Send + Sync + 'static;
+}
+
+impl<S, B> HttpService for S
+where
+    S: Service<
+            Request,
+            Response = http::Response<B>,
+            Error: Into<BoxError>,
+            Future: Send + 'static,
+        > + Clone
+        + Send
+        + Sync
+        + 'static,
+    B: http_body::Body<Data = Bytes, Error: Into<BoxError>> + Send + Sync + 'static,
+{
+    type ResBody = B;
+}
+
 #[derive(Clone)]
 pub struct ClientService(BoxedService);
 
 impl ClientService {
-    pub fn new<S, B>(service: S) -> Self
-    where
-        S: Service<Request, Response = http::Response<B>> + Clone + Send + Sync + 'static,
-        S::Error: Into<BoxError>,
-        S::Future: Send + 'static,
-        B: http_body::Body<Data = Bytes> + Send + Sync + 'static,
-        B::Error: Into<BoxError>,
-    {
+    pub fn new<S: HttpService>(service: S) -> Self {
         try_downcast(service).unwrap_or_else(|service: S| {
             Self(BoxedService::new(
                 service
@@ -34,14 +57,9 @@ impl ClientService {
         })
     }
 
-    pub fn layer<L, B>(self, layer: L) -> Self
+    pub fn layer<L>(self, layer: L) -> Self
     where
-        L: Layer<ClientService>,
-        L::Service: Service<Request, Response = http::Response<B>> + Clone + Send + Sync + 'static,
-        <L::Service as Service<Request>>::Error: Into<BoxError>,
-        <L::Service as Service<Request>>::Future: Send + 'static,
-        B: http_body::Body<Data = Bytes> + Send + Sync + 'static,
-        B::Error: Into<BoxError>,
+        L: Layer<ClientService, Service: HttpService>,
     {
         Self::new(layer.layer(self))
     }
