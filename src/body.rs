@@ -8,7 +8,7 @@ use bytes::Bytes;
 use http_body::{Frame, SizeHint};
 use http_body_util::{BodyExt, combinators::BoxBody};
 
-use crate::{Error, error::BoxError};
+use crate::{Error, error::BoxError, try_downcast};
 
 pub struct Body(Inner);
 
@@ -162,31 +162,12 @@ impl http_body::Body for Body {
     }
 }
 
-fn try_downcast<T, U>(value: U) -> Result<T, U>
-where
-    T: 'static,
-    U: Send + 'static,
-{
-    let mut value = Some(value);
-    if let Some(value) = <dyn std::any::Any>::downcast_mut::<Option<T>>(&mut value) {
-        Ok(value.take().unwrap())
-    } else {
-        Err(value.unwrap())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use bytes::Bytes;
     use http_body::Body as _;
 
-    use super::{Body, try_downcast};
-
-    #[test]
-    fn test_try_downcast() {
-        assert_eq!(try_downcast::<i32, _>(5_u32), Err(5_u32));
-        assert_eq!(try_downcast::<i32, _>(5_i32), Ok(5_i32));
-    }
+    use super::Body;
 
     #[test]
     fn as_bytes() {

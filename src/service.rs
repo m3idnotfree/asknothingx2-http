@@ -9,7 +9,7 @@ use tower::{ServiceExt, util::BoxCloneSyncService};
 use tower_layer::Layer;
 use tower_service::Service;
 
-use crate::{Body, BoxedFuture, Error, Request, Response, error::BoxError};
+use crate::{Body, BoxedFuture, Error, Request, Response, error::BoxError, try_downcast};
 
 type BoxedService = BoxCloneSyncService<Request, Response, BoxError>;
 
@@ -25,11 +25,13 @@ impl ClientService {
         B: http_body::Body<Data = Bytes> + Send + Sync + 'static,
         B::Error: Into<BoxError>,
     {
-        Self(BoxedService::new(
-            service
-                .map_response(|resp| resp.map(Body::wrap))
-                .map_err(Into::into),
-        ))
+        try_downcast(service).unwrap_or_else(|service: S| {
+            Self(BoxedService::new(
+                service
+                    .map_response(|resp| resp.map(Body::wrap))
+                    .map_err(Into::into),
+            ))
+        })
     }
 
     pub fn layer<L, B>(self, layer: L) -> Self

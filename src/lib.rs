@@ -84,3 +84,27 @@ pub(crate) type BoxedFuture =
 
 pub type Request = http::Request<Body>;
 pub type Response = http::Response<Body>;
+
+fn try_downcast<T, U>(value: U) -> Result<T, U>
+where
+    T: 'static,
+    U: Send + 'static,
+{
+    let mut value = Some(value);
+    if let Some(value) = <dyn std::any::Any>::downcast_mut::<Option<T>>(&mut value) {
+        Ok(value.take().unwrap())
+    } else {
+        Err(value.unwrap())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::try_downcast;
+
+    #[test]
+    fn test_try_downcast() {
+        assert_eq!(try_downcast::<i32, _>(5_u32), Err(5_u32));
+        assert_eq!(try_downcast::<i32, _>(5_i32), Ok(5_i32));
+    }
+}
