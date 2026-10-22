@@ -21,6 +21,10 @@ required-features = ["ureq"]
 [[example]]
 name = "custom_client"
 
+[[example]]
+name = "client_builder"
+required-features = ["reqwest"]
+
 [[test]]
 name = "reqwest"
 required-features = ["reqwest"]
