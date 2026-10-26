@@ -6,31 +6,32 @@
 // pollster = "1"
 // serde_json = "1"
 // tower = { version = "0.5", features = ["limit"] }
-// tower-http = { version = "0.7", features = ["set-header", "trace"] }
+// tower-http = { version = "0.7", features = ["trace"] }
 // ureq = "3"
 // ```
 
-use asknothingx2_http::{Body, ClientService, client::Ureq};
-use http::{
-    HeaderValue,
-    header::{CONTENT_TYPE, USER_AGENT},
-};
+use asknothingx2_http::{Body, ClientService, HeaderValue, client::Ureq, config::preset};
+use http::header::CONTENT_TYPE;
 use serde_json::json;
 use tower::limit::ConcurrencyLimitLayer;
-use tower_http::{set_header::SetRequestHeaderLayer, trace::TraceLayer};
+use tower_http::trace::TraceLayer;
+use ureq::Agent;
+
+const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
 fn main() -> anyhow::Result<()> {
-    let svc = ClientService::new(Ureq::new(ureq::Agent::new_with_defaults()))
+    let agent = preset::json_api(
+        Agent::config_builder(),
+        HeaderValue::from_static(USER_AGENT),
+    )
+    .max_idle_connections(50)
+    .https_only(false)
+    .build()
+    .new_agent();
+
+    let svc = ClientService::new(Ureq::new(agent))
         .layer(ConcurrencyLimitLayer::new(10))
-        .layer(TraceLayer::new_for_http())
-        .layer(SetRequestHeaderLayer::overriding(
-            USER_AGENT,
-            HeaderValue::from_static(concat!(
-                env!("CARGO_PKG_NAME"),
-                "/",
-                env!("CARGO_PKG_VERSION"),
-            )),
-        ));
+        .layer(TraceLayer::new_for_http());
 
     let req = http::Request::post("http://example.com/users")
         .header(CONTENT_TYPE, "application/json")

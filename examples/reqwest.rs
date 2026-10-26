@@ -7,29 +7,28 @@
 // serde_json = "1"
 // tokio = { version = "1.53", features = ["full"] }
 // tower = { version = "0.5", features = ["limit"] }
-// tower-http = { version = "0.7", features = ["set-header", "trace"] }
+// tower-http = { version = "0.7", features = ["trace"] }
 // ```
 
-use asknothingx2_http::{Body, ClientService, client::Reqwest};
-use http::{HeaderValue, header::USER_AGENT};
+use asknothingx2_http::{Body, ClientService, HeaderValue, client::Reqwest, config::preset};
 use tower::limit::ConcurrencyLimitLayer;
-use tower_http::{set_header::SetRequestHeaderLayer, trace::TraceLayer};
+use tower_http::trace::TraceLayer;
+
+const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let client = reqwest::Client::new();
+    let client = preset::json_api(
+        reqwest::Client::builder(),
+        HeaderValue::from_static(USER_AGENT),
+    )
+    .referer(false)
+    .https_only(false)
+    .build()?;
 
     let svc = ClientService::new(Reqwest::new(client.clone()))
         .layer(ConcurrencyLimitLayer::new(10))
-        .layer(TraceLayer::new_for_http())
-        .layer(SetRequestHeaderLayer::overriding(
-            USER_AGENT,
-            HeaderValue::from_static(concat!(
-                env!("CARGO_PKG_NAME"),
-                "/",
-                env!("CARGO_PKG_VERSION"),
-            )),
-        ));
+        .layer(TraceLayer::new_for_http());
 
     let req = client
         .post("http://example.com/users")

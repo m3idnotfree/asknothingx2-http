@@ -70,6 +70,7 @@
 
 #[cfg(any(feature = "reqwest", feature = "ureq"))]
 pub mod client;
+pub mod config;
 
 mod body;
 mod error;
@@ -84,6 +85,8 @@ pub(crate) type BoxedFuture =
 
 pub type Request = http::Request<Body>;
 pub type Response = http::Response<Body>;
+
+pub use http::HeaderValue;
 
 fn try_downcast<T, U>(value: U) -> Result<T, U>
 where
