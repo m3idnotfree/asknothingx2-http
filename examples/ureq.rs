@@ -10,8 +10,9 @@
 // ureq = "3"
 // ```
 
-use asknothingx2_http::{Body, ClientService, HeaderValue, client::Ureq, config::preset};
-use http::header::CONTENT_TYPE;
+use asknothingx2_http::{
+    Body, ClientService, HeaderMapExt, HeaderValue, client::Ureq, config::preset,
+};
 use serde_json::json;
 use tower::limit::ConcurrencyLimitLayer;
 use tower_http::trace::TraceLayer;
@@ -33,9 +34,10 @@ fn main() -> anyhow::Result<()> {
         .layer(ConcurrencyLimitLayer::new(10))
         .layer(TraceLayer::new_for_http());
 
-    let req = http::Request::post("http://example.com/users")
-        .header(CONTENT_TYPE, "application/json")
+    let mut req = http::Request::post("http://example.com/users")
         .body(Body::from(serde_json::to_vec(&json!({ "name": "jonh" }))?))?;
+
+    req.headers_mut().content_type_json();
 
     let resp = pollster::block_on(svc.execute(req))?;
     let bytes = pollster::block_on(resp.into_body().collect_bytes())?;

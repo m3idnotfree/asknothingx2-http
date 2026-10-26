@@ -74,10 +74,12 @@ pub mod config;
 
 mod body;
 mod error;
+mod header_ext;
 mod service;
 
 pub use body::Body;
 pub use error::Error;
+pub use header_ext::HeaderMapExt;
 pub use service::{ClientFuture, ClientService, HttpService};
 
 pub(crate) type BoxedFuture =
